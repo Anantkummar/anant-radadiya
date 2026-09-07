@@ -2,17 +2,23 @@ const revealTargets = document.querySelectorAll('.hero h1, .section-title, .prof
 
 const visitCount = document.querySelector('#visit-count');
 if (visitCount) {
-  const storageKey = 'anantkumar_portfolio_page_visits_v3';
-  let currentCount = 0n;
-  try {
-    const savedCount = localStorage.getItem(storageKey);
-    if (savedCount !== null && /^\d+$/.test(savedCount)) currentCount = BigInt(savedCount) + 1n;
-  } catch {
-    currentCount = 0n;
-  }
-  localStorage.setItem(storageKey, currentCount.toString());
-  visitCount.textContent = currentCount.toString().padStart(4, '0');
-  visitCount.closest('.visit-counter').classList.add('count-updated');
+  const counter = visitCount.closest('.visit-counter');
+  const updateVisits = async (method) => {
+    try {
+      const response = await fetch('/api/visits', { method, cache:'no-store' });
+      if (!response.ok) throw new Error('Counter unavailable');
+      const data = await response.json();
+      if (!Number.isSafeInteger(data.count) || data.count < 0) throw new Error('Invalid count');
+      visitCount.textContent = String(data.count).padStart(4, '0');
+      counter.title = 'Total website visits across all devices';
+      counter.classList.add('count-updated');
+    } catch {
+      visitCount.textContent = '—';
+      counter.title = 'Visit counter temporarily unavailable';
+    }
+  };
+  updateVisits('POST');
+  window.setInterval(() => { if (!document.hidden) updateVisits('GET'); }, 15000);
 }
 
 const navToggle = document.querySelector('.nav-toggle');
@@ -105,20 +111,10 @@ const explorePortal = document.querySelector('.explore-portal');
 if (explorePortal) {
   explorePortal.addEventListener('click', (event) => {
     event.preventDefault();
-    if (explorePortal.classList.contains('is-launching')) return;
     const destination = document.querySelector('#work');
-    const label = explorePortal.querySelector('.portal-core small');
-    explorePortal.classList.add('is-launching');
-    label.textContent = 'Opening';
-    window.setTimeout(() => {
-      destination.scrollIntoView({ behavior:'smooth', block:'start' });
-      destination.classList.add('portal-arrival');
-      window.setTimeout(() => destination.classList.remove('portal-arrival'), 1100);
-    }, 520);
-    window.setTimeout(() => {
-      explorePortal.classList.remove('is-launching');
-      label.textContent = 'Explore';
-    }, 1500);
+    if (!destination) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    destination.scrollIntoView({ behavior:reduceMotion ? 'auto' : 'smooth', block:'start' });
   });
 }
 
