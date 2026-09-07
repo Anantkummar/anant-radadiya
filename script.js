@@ -1,26 +1,5 @@
 const revealTargets = document.querySelectorAll('.hero h1, .section-title, .profile-card, .about-content, .stats-bar, .skill-grid article, .detail-card, .project-card-grid > article, .three-card-grid article, .language-grid article, .achievement-grid article, .four-card-grid article, .service-grid article, .review-overview, .review-form-panel, .review-display, .contact-section h2, .email-link');
 
-const visitCount = document.querySelector('#visit-count');
-if (visitCount) {
-  const counter = visitCount.closest('.visit-counter');
-  const updateVisits = async (method) => {
-    try {
-      const response = await fetch('/api/visits', { method, cache:'no-store' });
-      if (!response.ok) throw new Error('Counter unavailable');
-      const data = await response.json();
-      if (!Number.isSafeInteger(data.count) || data.count < 0) throw new Error('Invalid count');
-      visitCount.textContent = String(data.count).padStart(4, '0');
-      counter.title = 'Total website visits across all devices';
-      counter.classList.add('count-updated');
-    } catch {
-      visitCount.textContent = '—';
-      counter.title = 'Visit counter temporarily unavailable';
-    }
-  };
-  updateVisits('POST');
-  window.setInterval(() => { if (!document.hidden) updateVisits('GET'); }, 15000);
-}
-
 const navToggle = document.querySelector('.nav-toggle');
 const primaryNavigation = document.querySelector('#primary-navigation');
 const closeMobileNavigation = () => {

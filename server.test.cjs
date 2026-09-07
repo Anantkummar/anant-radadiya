@@ -20,10 +20,15 @@ test('visits increment across clients, survive restart, and stay private', async
     assert.deepEqual(visits.sort((a,b) => a-b), [1,2,3,4,5,6,7,8,9,10]);
     assert.equal((await fetch(url + '/.visit-data/visits.json')).status, 404);
     assert.equal((await fetch(url + '/server.cjs')).status, 404);
+    const options = { method:'POST', headers:{ 'X-Visit-ID':'page-load-1234567890' } };
+    assert.equal((await (await fetch(url + '/api/visits', options)).json()).count, 11);
+    assert.equal((await (await fetch(url + '/api/visits', options)).json()).count, 11);
     await close();
     url = await start();
-    assert.equal((await (await fetch(url + '/api/visits')).json()).count, 10);
-    assert.equal((await (await fetch(url + '/api/visits', { method:'POST' })).json()).count, 11);
+    assert.equal((await (await fetch(url + '/api/visits', options)).json()).count, 11);
+    assert.equal((await (await fetch(url + '/api/visits')).json()).count, 11);
+    assert.equal((await (await fetch(url + '/api/visits', { method:'POST' })).json()).count, 12);
+    assert.equal((await fetch(url + '/api/visits', { method:'POST', headers:{ 'X-Visit-ID':'bad' } })).status, 400);
   } finally {
     if (server?.listening) await close();
     fs.rmSync(dataDir, { recursive:true, force:true });

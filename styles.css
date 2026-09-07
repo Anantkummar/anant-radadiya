@@ -27,6 +27,8 @@ a { color:inherit; text-decoration:none; }
 .visit-counter small em { width:5px; height:5px; border-radius:50%; background:#38ebb8; box-shadow:0 0 8px #38ebb8; animation:pulse 1.5s infinite; }
 .visit-counter b { position:relative; z-index:1; width:max-content; color:#f3f7ff; font:600 12px var(--mono); letter-spacing:.12em; white-space:nowrap; text-shadow:0 0 12px rgba(25,215,212,.35); }
 .visit-counter.count-updated b { animation:countPop .5s cubic-bezier(.2,.8,.2,1); }
+.visit-counter[data-state="loading"] small em,
+.visit-counter[data-state="offline"] small em { background:#8c96a6; box-shadow:none; animation:none; }
 @keyframes countPop { 0% { opacity:0; transform:translateY(8px) scale(.8); } 70% { transform:translateY(-1px) scale(1.08); } 100% { opacity:1; transform:none; } }
 .availability, .mono, .eyebrow { font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
 .availability { display:flex; align-items:center; gap:8px; }

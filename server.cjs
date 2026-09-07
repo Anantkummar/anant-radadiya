@@ -6,9 +6,13 @@ function createSiteServer({ root = __dirname, dataDir = path.join(__dirname, '.v
   fs.mkdirSync(dataDir, { recursive: true });
   const counterFile = path.join(dataDir, 'visits.json');
   let count = 0;
+  let recentVisits = [];
   try {
-    count = JSON.parse(fs.readFileSync(counterFile, 'utf8')).count;
+    const stored = JSON.parse(fs.readFileSync(counterFile, 'utf8'));
+    count = stored.count;
+    recentVisits = stored.recentVisits || [];
     if (!Number.isSafeInteger(count) || count < 0) throw new Error('Invalid stored visit count');
+    if (!Array.isArray(recentVisits) || recentVisits.some(id => typeof id !== 'string')) throw new Error('Invalid stored visits');
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;
   }
@@ -23,11 +27,20 @@ function createSiteServer({ root = __dirname, dataDir = path.join(__dirname, '.v
       if (!['GET', 'POST'].includes(req.method)) { res.writeHead(405, { Allow:'GET, POST' }).end(); return; }
       try {
         if (req.method === 'POST') {
-          const next = count + 1;
-          if (!Number.isSafeInteger(next)) throw new Error('Counter limit reached');
-          fs.writeFileSync(counterFile + '.tmp', JSON.stringify({ count:next }));
-          fs.renameSync(counterFile + '.tmp', counterFile);
-          count = next;
+          const visitId = req.headers['x-visit-id'];
+          if (visitId !== undefined && !/^[a-zA-Z0-9-]{16,80}$/.test(visitId)) {
+            res.writeHead(400).end(JSON.stringify({ error:'Invalid visit ID' })); return;
+          }
+          // A retry after a lost response must not count the same page load twice.
+          if (!visitId || !recentVisits.includes(visitId)) {
+            const next = count + 1;
+            if (!Number.isSafeInteger(next)) throw new Error('Counter limit reached');
+            const nextVisits = visitId ? [...recentVisits, visitId].slice(-10000) : recentVisits;
+            fs.writeFileSync(counterFile + '.tmp', JSON.stringify({ count:next, recentVisits:nextVisits }));
+            fs.renameSync(counterFile + '.tmp', counterFile);
+            count = next;
+            recentVisits = nextVisits;
+          }
         }
         res.end(JSON.stringify({ count }));
       } catch { res.writeHead(503).end(JSON.stringify({ error:'Counter unavailable' })); }
