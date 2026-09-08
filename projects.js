@@ -347,28 +347,6 @@ projectLock.addEventListener('click', (event) => {
   if (event.target === projectLock) closeProjectLock();
 });
 
-try {
-  const saved = JSON.parse(localStorage.getItem('anantkumar_portfolio_projects'));
-  if (Array.isArray(saved)) {
-    const importButton = document.createElement('button');
-    importButton.type = 'button';
-    importButton.className = 'save-project';
-    importButton.textContent = 'Use this device’s saved projects on all devices';
-    projectList.before(importButton);
-    importButton.addEventListener('click', () => requestProjectUnlock(async () => {
-      importButton.disabled = true;
-      try {
-        await saveProjects(saved, projectRevision);
-        localStorage.removeItem('anantkumar_portfolio_projects');
-        importButton.remove();
-      } catch (error) {
-        projectStatus.textContent = errorMessage(error);
-        importButton.disabled = false;
-      }
-    }));
-  }
-} catch { /* Shared storage works even when browser storage is unavailable. */ }
-
 projectStatus.textContent = 'Loading projects…';
 watchProjects(data => {
   portfolioProjects = data.items === null ? defaultPortfolioProjects : data.items;

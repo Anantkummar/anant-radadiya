@@ -33,9 +33,9 @@ an old editor from overwriting newer changes made on another device.
 
 ## Existing phone data
 
-Open the updated site on the original phone and browser. Use the button to
-publish this device's saved projects, then sign in. This replaces the shared
-project list, including deletions: use the device with the list you want to keep.
+Projects load from shared storage automatically. The project section does not
+offer an import button for older device-local project lists.
+Open the updated site on the original phone and browser.
 Use 'Publish reviews saved on this device' to publish older reviews. Stable IDs
 prevent duplicate reviews when retrying an import. Local data is removed only
 after confirmed success. Cleared data and data on other devices cannot be
