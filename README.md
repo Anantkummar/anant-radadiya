@@ -7,7 +7,9 @@ The web configuration in firebase-config.json is public. Never add credentials.
 ## Firebase setup
 
 The default database was created and firestore.rules was deployed on 2026-09-08.
-Admin Authentication setup and deployment of the website files remain pending.
+Email/password Authentication and the requested admin account were configured
+on 2026-09-08. The owner must choose a password using the private setup link.
+Deployment of the website files remains pending.
 
 1. In Firebase project anant-radadiya, enable Cloud Firestore and create the
    (default) database in production mode. Select the region before creating it.
