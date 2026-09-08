@@ -1,19 +1,16 @@
-const reviewStorageKey = 'anantkumar_customer_reviews';
+import { watchReviews, publishReview, errorMessage } from './shared-data.js';
 const reviewForm = document.querySelector('#review-form');
 const reviewList = document.querySelector('#review-list');
 const reviewMessage = reviewForm.querySelector('textarea[name="message"]');
 const reviewStatus = document.querySelector('.review-form-status');
 
-const loadReviews = () => {
-  try {
-    const savedReviews = JSON.parse(localStorage.getItem(reviewStorageKey));
-    return Array.isArray(savedReviews) ? savedReviews : [];
-  } catch {
-    return [];
-  }
-};
-
-let customerReviews = loadReviews();
+let customerReviews = [];
+let submittingReview = false;
+let pendingReviewId = null;
+let pendingReviewContent = null;
+const syncStatus = document.createElement('p');
+syncStatus.setAttribute('role', 'status');
+reviewList.before(syncStatus);
 
 const createStars = (rating) => {
   const stars = document.createElement('div');
@@ -76,7 +73,10 @@ const renderReviews = () => {
     message.textContent = `“${review.message}”`;
     const scores = document.createElement('div');
     scores.className = 'review-scores';
-    scores.innerHTML = `<span>Work <b>${review.workRating}.0</b></span><span>Website <b>${review.websiteRating}.0</b></span><time>${review.date}</time>`;
+    scores.innerHTML = `<span>Work <b>${review.workRating}.0</b></span><span>Website <b>${review.websiteRating}.0</b></span>`;
+    const date = document.createElement('time');
+    date.textContent = review.date;
+    scores.append(date);
     card.append(top, message, scores);
     reviewList.append(card);
   });
@@ -86,23 +86,82 @@ reviewMessage.addEventListener('input', () => {
   document.querySelector('#review-characters').textContent = String(reviewMessage.value.length);
 });
 
-reviewForm.addEventListener('submit', (event) => {
+reviewForm.addEventListener('submit', async (event) => {
   event.preventDefault();
+  if (submittingReview) return;
   const formData = new FormData(reviewForm);
-  customerReviews.push({
+  const review = {
     name: formData.get('customerName').trim(),
     service: formData.get('service'),
     workRating: Number(formData.get('workRating')),
     websiteRating: Number(formData.get('websiteRating')),
     message: formData.get('message').trim(),
     date: new Intl.DateTimeFormat('en', { month:'short', year:'numeric' }).format(new Date())
-  });
-  localStorage.setItem(reviewStorageKey, JSON.stringify(customerReviews));
-  reviewForm.reset();
-  document.querySelector('#review-characters').textContent = '0';
-  reviewStatus.textContent = 'Thank you! Your review is now live.';
-  renderReviews();
-  window.setTimeout(() => { reviewStatus.textContent = ''; }, 4000);
+  };
+  if (!review.name || review.name.length > 100 || !review.message || review.message.length > 500
+      || ![1, 2, 3, 4, 5].includes(review.workRating) || ![1, 2, 3, 4, 5].includes(review.websiteRating)) {
+    reviewStatus.textContent = 'Enter your name, feedback, and both star ratings.';
+    return;
+  }
+  const content = JSON.stringify(review);
+  if (pendingReviewContent !== content) {
+    pendingReviewContent = content;
+    pendingReviewId = crypto.randomUUID();
+  }
+  submittingReview = true;
+  const submit = reviewForm.querySelector('[type="submit"]');
+  submit.disabled = true;
+  reviewStatus.textContent = 'Publishing your review…';
+  try {
+    await publishReview(review, pendingReviewId);
+    reviewForm.reset();
+    pendingReviewId = null;
+    pendingReviewContent = null;
+    document.querySelector('#review-characters').textContent = '0';
+    reviewStatus.textContent = 'Thank you! Your review is now live.';
+  } catch (error) {
+    reviewStatus.textContent = `Review was not published. ${errorMessage(error)}`;
+  } finally {
+    submittingReview = false;
+    submit.disabled = false;
+  }
 });
 
-renderReviews();
+syncStatus.textContent = 'Loading reviews…';
+watchReviews(reviews => {
+  customerReviews = reviews;
+  syncStatus.textContent = '';
+  renderReviews();
+}, error => {
+  syncStatus.textContent = `Reviews could not sync. ${errorMessage(error)}`;
+});
+
+// Old reviews remain on the original device until its visitor publishes them.
+try {
+  const oldReviews = JSON.parse(localStorage.getItem('anantkumar_customer_reviews'));
+  if (Array.isArray(oldReviews) && oldReviews.length) {
+    const importButton = document.createElement('button');
+    importButton.type = 'button';
+    importButton.className = 'save-project';
+    importButton.textContent = 'Publish reviews saved on this device';
+    reviewForm.after(importButton);
+    importButton.addEventListener('click', async () => {
+      importButton.disabled = true;
+      try {
+        for (const old of oldReviews) {
+          const review = { name: old.name, service: old.service, workRating: old.workRating,
+            websiteRating: old.websiteRating, message: old.message, date: old.date };
+          const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(review)));
+          const id = 'legacy-' + [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+          await publishReview(review, id);
+        }
+        localStorage.removeItem('anantkumar_customer_reviews');
+        importButton.remove();
+        reviewStatus.textContent = 'Your saved reviews are now shared across devices.';
+      } catch (error) {
+        reviewStatus.textContent = errorMessage(error);
+        importButton.disabled = false;
+      }
+    });
+  }
+} catch { /* Storage may be unavailable; shared reviews still work. */ }

@@ -1,3 +1,5 @@
+import { watchProjects, saveProjects, signIn, changePassword, errorMessage } from './shared-data.js';
+
 const defaultPortfolioProjects = [
   {
     title: "YelpCamp",
@@ -40,7 +42,6 @@ const projectEditor = document.querySelector('#project-editor');
 const projectForm = document.querySelector('#project-form');
 const editorTitle = document.querySelector('#editor-title');
 const deleteProjectButton = document.querySelector('.delete-project');
-const projectStorageKey = 'anantkumar_portfolio_projects';
 const projectLock = document.querySelector('#project-lock');
 const projectLockForm = document.querySelector('#project-lock-form');
 const projectLockPassword = document.querySelector('#project-lock-password');
@@ -50,12 +51,19 @@ const confirmPasswordInput = document.querySelector('#project-confirm-password')
 const changePasswordFields = document.querySelector('#change-password-fields');
 const changePasswordButton = document.querySelector('.change-password-toggle');
 const unlockSubmitButton = document.querySelector('.project-unlock-submit');
-const adminPasswordStorageKey = 'anantkumar_project_admin_password';
-const defaultAdminPassword = 'Anant2026';
 let pendingProtectedAction = null;
 let isChangingPassword = false;
-
-const getAdminPassword = () => localStorage.getItem(adminPasswordStorageKey) || defaultAdminPassword;
+let projectsReady = false;
+let projectRevision = 0;
+let editorRevision = 0;
+let editorProjects = [];
+let savingProject = false;
+const projectStatus = document.createElement('p');
+projectStatus.setAttribute('role', 'status');
+projectList.before(projectStatus);
+const editorStatus = document.createElement('p');
+editorStatus.setAttribute('role', 'alert');
+projectForm.append(editorStatus);
 
 const setPasswordMode = (enabled) => {
   isChangingPassword = enabled;
@@ -71,6 +79,7 @@ const setPasswordMode = (enabled) => {
 };
 
 const requestProjectUnlock = (action) => {
+  if (!projectsReady) return;
   pendingProtectedAction = action;
   projectLockForm.reset();
   projectLock.querySelectorAll('.password-eye').forEach((button) => {
@@ -84,19 +93,13 @@ const requestProjectUnlock = (action) => {
   window.setTimeout(() => projectLockPassword.focus(), 50);
 };
 
-const loadProjects = () => {
-  try {
-    const savedProjects = JSON.parse(localStorage.getItem(projectStorageKey));
-    return Array.isArray(savedProjects) ? savedProjects : defaultPortfolioProjects;
-  } catch {
-    return defaultPortfolioProjects;
-  }
-};
-
-let portfolioProjects = loadProjects();
+let portfolioProjects = [];
 
 const createProjectLink = (label, url, className, iconClass) => {
   if (!url) return null;
+  try {
+    if (!['http:', 'https:'].includes(new URL(url, location.href).protocol)) return null;
+  } catch { return null; }
   const link = document.createElement('a');
   link.className = className;
   link.href = url;
@@ -108,11 +111,10 @@ const createProjectLink = (label, url, className, iconClass) => {
   return link;
 };
 
-const saveProjects = () => {
-  localStorage.setItem(projectStorageKey, JSON.stringify(portfolioProjects));
-};
-
 const openProjectEditor = (index = null, focusLiveDemo = false) => {
+  editorRevision = projectRevision;
+  editorProjects = [...portfolioProjects];
+  editorStatus.textContent = '';
   projectForm.reset();
   projectForm.elements.projectIndex.value = index === null ? '' : String(index);
   editorTitle.textContent = index === null ? 'Add a Project' : 'Edit Project';
@@ -155,6 +157,8 @@ const renderProjects = () => {
     const card = document.createElement('article');
     card.className = 'project-card';
     card.dataset.category = project.category;
+    const selectedCategory = document.querySelector('.project-filters button[aria-selected="true"]')?.dataset.category || 'all';
+    card.hidden = selectedCategory !== 'all' && project.category !== selectedCategory;
     card.addEventListener('pointermove', (event) => {
       const bounds = card.getBoundingClientRect();
       card.style.setProperty('--spot-x', `${event.clientX - bounds.left}px`);
@@ -226,7 +230,24 @@ const renderProjects = () => {
   projectList.append(addCard);
 };
 
-projectForm.addEventListener('submit', (event) => {
+async function commitProjects(items) {
+  if (savingProject) return;
+  savingProject = true;
+  const buttons = [...projectForm.querySelectorAll('button')];
+  buttons.forEach(button => { button.disabled = true; });
+  editorStatus.textContent = 'Saving changes…';
+  try {
+    await saveProjects(items, editorRevision);
+    projectEditor.close();
+  } catch (error) {
+    editorStatus.textContent = errorMessage(error);
+  } finally {
+    savingProject = false;
+    buttons.forEach(button => { button.disabled = false; });
+  }
+}
+
+projectForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const formData = new FormData(projectForm);
   const project = {
@@ -241,21 +262,19 @@ projectForm.addEventListener('submit', (event) => {
     sourceCode: formData.get('sourceCode').trim()
   };
   const indexValue = formData.get('projectIndex');
-  if (indexValue === '') portfolioProjects.push(project);
-  else portfolioProjects[Number(indexValue)] = project;
-  saveProjects();
-  renderProjects();
-  projectEditor.close();
+  const next = [...editorProjects];
+  if (indexValue === '') next.push(project);
+  else next[Number(indexValue)] = project;
+  await commitProjects(next);
 });
 
 deleteProjectButton.addEventListener('click', () => {
   requestProjectUnlock(() => {
     const index = Number(projectForm.elements.projectIndex.value);
-    if (!Number.isInteger(index)) return;
-    portfolioProjects.splice(index, 1);
-    saveProjects();
-    renderProjects();
-    projectEditor.close();
+    if (!Number.isInteger(index) || projectForm.elements.projectIndex.value === '' || !editorProjects[index]) return;
+    const next = [...editorProjects];
+    next.splice(index, 1);
+    void commitProjects(next);
   });
 });
 
@@ -264,36 +283,44 @@ document.querySelector('.cancel-editor').addEventListener('click', () => project
 projectEditor.addEventListener('click', (event) => {
   if (event.target === projectEditor) projectEditor.close();
 });
+projectEditor.addEventListener('cancel', event => {
+  if (savingProject) event.preventDefault();
+});
 
-projectLockForm.addEventListener('submit', (event) => {
+projectLockForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  if (projectLockPassword.value !== getAdminPassword()) {
-    projectLockError.textContent = 'Incorrect password. Please try again.';
-    projectLockPassword.select();
-    return;
-  }
-  if (isChangingPassword) {
-    const newPassword = newPasswordInput.value;
-    if (!/^[A-Za-z0-9]{4,10}$/.test(newPassword)) {
-      projectLockError.textContent = 'Use 4–10 letters or numbers only. No symbols.';
-      newPasswordInput.select();
+  if (unlockSubmitButton.disabled) return;
+  unlockSubmitButton.disabled = true;
+  projectLockError.textContent = 'Signing in…';
+  try {
+    await signIn(document.querySelector('#project-admin-email').value.trim(), projectLockPassword.value);
+    if (isChangingPassword) {
+      const newPassword = newPasswordInput.value;
+      if (newPassword.length < 6) {
+        projectLockError.textContent = 'Use at least 6 characters.';
+        newPasswordInput.select();
+        return;
+      }
+      if (newPassword !== confirmPasswordInput.value) {
+        projectLockError.textContent = 'New passwords do not match.';
+        confirmPasswordInput.select();
+        return;
+      }
+      await changePassword(newPassword);
+      projectLockForm.reset();
+      setPasswordMode(false);
+      projectLockError.textContent = 'Password changed successfully.';
       return;
     }
-    if (newPassword !== confirmPasswordInput.value) {
-      projectLockError.textContent = 'New passwords do not match.';
-      confirmPasswordInput.select();
-      return;
-    }
-    localStorage.setItem(adminPasswordStorageKey, newPassword);
-    projectLockForm.reset();
-    setPasswordMode(false);
-    projectLockError.textContent = 'Password changed successfully.';
-    return;
+    const action = pendingProtectedAction;
+    pendingProtectedAction = null;
+    projectLock.close();
+    if (action) action();
+  } catch (error) {
+    projectLockError.textContent = errorMessage(error);
+  } finally {
+    unlockSubmitButton.disabled = false;
   }
-  const action = pendingProtectedAction;
-  pendingProtectedAction = null;
-  projectLock.close();
-  if (action) action();
 });
 
 const closeProjectLock = () => {
@@ -320,4 +347,36 @@ projectLock.addEventListener('click', (event) => {
   if (event.target === projectLock) closeProjectLock();
 });
 
-renderProjects();
+try {
+  const saved = JSON.parse(localStorage.getItem('anantkumar_portfolio_projects'));
+  if (Array.isArray(saved)) {
+    const importButton = document.createElement('button');
+    importButton.type = 'button';
+    importButton.className = 'save-project';
+    importButton.textContent = 'Use this device’s saved projects on all devices';
+    projectList.before(importButton);
+    importButton.addEventListener('click', () => requestProjectUnlock(async () => {
+      importButton.disabled = true;
+      try {
+        await saveProjects(saved, projectRevision);
+        localStorage.removeItem('anantkumar_portfolio_projects');
+        importButton.remove();
+      } catch (error) {
+        projectStatus.textContent = errorMessage(error);
+        importButton.disabled = false;
+      }
+    }));
+  }
+} catch { /* Shared storage works even when browser storage is unavailable. */ }
+
+projectStatus.textContent = 'Loading projects…';
+watchProjects(data => {
+  portfolioProjects = data.items === null ? defaultPortfolioProjects : data.items;
+  projectRevision = data.revision;
+  projectsReady = true;
+  projectStatus.textContent = '';
+  renderProjects();
+}, error => {
+  projectsReady = false;
+  projectStatus.textContent = `Projects could not sync. ${errorMessage(error)}`;
+});

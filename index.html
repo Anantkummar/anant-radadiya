@@ -180,12 +180,12 @@
 
       <dialog class="project-lock" id="project-lock">
         <form id="project-lock-form">
-          <div class="editor-heading"><div><small>Protected Action</small><h2>Admin Password</h2><p>Enter the password to add, edit, or delete a project.</p></div><button class="project-lock-close" type="button" aria-label="Close password dialog">×</button></div>
-          <label class="project-lock-label">Current password<span class="password-input-wrap"><input id="project-lock-password" type="password" autocomplete="current-password" minlength="4" maxlength="10" pattern="[A-Za-z0-9]+" required /><button class="password-eye" type="button" aria-label="Show password"><i class="fa-solid fa-eye"></i></button></span></label>
+          <div class="editor-heading"><div><small>Protected Action</small><h2>Admin Sign In</h2><p>Sign in to manage projects across all devices.</p></div><button class="project-lock-close" type="button" aria-label="Close password dialog">×</button></div>
+          <label class="project-lock-label">Admin email<input id="project-admin-email" type="email" autocomplete="username" required /></label><label class="project-lock-label">Current password<span class="password-input-wrap"><input id="project-lock-password" type="password" autocomplete="current-password" minlength="6" maxlength="128" required /><button class="password-eye" type="button" aria-label="Show password"><i class="fa-solid fa-eye"></i></button></span></label>
           <div class="change-password-fields" id="change-password-fields" hidden>
-            <label class="project-lock-label">New password<span class="password-input-wrap"><input id="project-new-password" type="password" autocomplete="new-password" minlength="4" maxlength="10" pattern="[A-Za-z0-9]+" /><button class="password-eye" type="button" aria-label="Show password"><i class="fa-solid fa-eye"></i></button></span></label>
-            <label class="project-lock-label">Confirm new password<span class="password-input-wrap"><input id="project-confirm-password" type="password" autocomplete="new-password" minlength="4" maxlength="10" pattern="[A-Za-z0-9]+" /><button class="password-eye" type="button" aria-label="Show password"><i class="fa-solid fa-eye"></i></button></span></label>
-            <small>Use 4–10 letters or numbers only. Symbols are not allowed.</small>
+            <label class="project-lock-label">New password<span class="password-input-wrap"><input id="project-new-password" type="password" autocomplete="new-password" minlength="6" maxlength="128" /><button class="password-eye" type="button" aria-label="Show password"><i class="fa-solid fa-eye"></i></button></span></label>
+            <label class="project-lock-label">Confirm new password<span class="password-input-wrap"><input id="project-confirm-password" type="password" autocomplete="new-password" minlength="6" maxlength="128" /><button class="password-eye" type="button" aria-label="Show password"><i class="fa-solid fa-eye"></i></button></span></label>
+            <small>Use at least 6 characters. Letters, numbers, and symbols are allowed.</small>
           </div>
           <p class="project-lock-error" id="project-lock-error" role="alert"></p>
           <div class="editor-actions lock-actions"><span></span><button class="project-lock-cancel" type="button">Cancel</button><button class="change-password-toggle" type="button">Change Password</button><button class="save-project project-unlock-submit" type="submit">Unlock <i class="fa-solid fa-lock-open"></i></button></div>
@@ -286,8 +286,8 @@
     </main>
 
   </div>
-  <script src="projects.js?v=20260904-5"></script>
-  <script src="reviews.js?v=20260904-5"></script>
+  <script type="module" src="projects.js?v=20260908-1"></script>
+  <script type="module" src="reviews.js?v=20260908-1"></script>
   <script src="script.js?v=20260907-1"></script>
 </body>
 </html>

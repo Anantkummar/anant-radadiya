@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    match /admins/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list, write: if false;
+    }
+    match /portfolio/projects {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['items', 'revision'])
+        && request.resource.data.items is list
+        && request.resource.data.items.size() <= 100
+        && request.resource.data.revision is int
+        && ((!exists(/databases/$(database)/documents/portfolio/projects) && request.resource.data.revision == 1)
+          || (exists(/databases/$(database)/documents/portfolio/projects) && request.resource.data.revision == resource.data.revision + 1));
+    }
+    match /reviews/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['name', 'service', 'message', 'workRating', 'websiteRating', 'date', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['name', 'service', 'message', 'workRating', 'websiteRating', 'date', 'createdAt'])
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 100
+        && request.resource.data['service'] is string && request.resource.data['service'].size() <= 100
+        && request.resource.data.message is string && request.resource.data.message.size() > 0 && request.resource.data.message.size() <= 500
+        && request.resource.data.workRating is int && request.resource.data.workRating >= 1 && request.resource.data.workRating <= 5
+        && request.resource.data.websiteRating is int && request.resource.data.websiteRating >= 1 && request.resource.data.websiteRating <= 5
+        && request.resource.data.date is string && request.resource.data.date.size() <= 30
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if isAdmin();
+    }
+  }
+}
