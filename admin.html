@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Project Admin | Anant Radadiya</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+<link rel="stylesheet" href="admin.css?v=20260911" />
+</head>
+<body>
+<header><a href="/" class="brand"><b class="brand-mark">AR<span>.</span></b><span class="brand-name">Anant Radadiya<small>PORTFOLIO STUDIO</small></span></a><a href="/" class="visit">View website <i class="fa-solid fa-arrow-up-right-from-square"></i></a></header>
+<main>
+<section id="login-section">
+<div class="login-mark"><i class="fa-solid fa-fingerprint"></i></div><p class="eyebrow">YOUR CREATIVE WORKSPACE</p><h1>Welcome back.</h1><p class="login-caption">Anant Radadiya / Owner access</p>
+<form id="login-form">
+<label>Username<input name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required /></label>
+<label>Password<input name="password" type="password" autocomplete="current-password" required maxlength="128" /></label>
+<button type="submit"><i class="fa-solid fa-arrow-right-to-bracket"></i> Sign in</button>
+<p id="login-status" role="alert"></p>
+</form>
+</section>
+<section id="dashboard" hidden>
+<aside class="studio-sidebar">
+  <div class="workspace-owner"><span class="workspace-symbol" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></span><div><strong>Anant Radadiya</strong><small>Project workspace</small></div></div>
+  <p class="sidebar-label">WORKSPACE</p>
+  <nav aria-label="Admin navigation"><a class="nav-active" href="#dashboard" aria-current="page"><i class="fa-solid fa-layer-group"></i> Projects <i class="fa-solid fa-arrow-right"></i></a><button id="account-settings"><i class="fa-solid fa-sliders"></i> Account settings</button><a href="/" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open portfolio</a></nav>
+  <div class="sidebar-bottom"><span class="owner-tag"><i class="fa-solid fa-circle-check"></i> Owner workspace</span><button id="sign-out"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign out</button></div>
+</aside>
+<div class="workspace-content">
+<div class="heading"><div><p class="eyebrow">WORKSPACE / PROJECTS</p><h1>Project dashboard.</h1></div><button id="add-project" disabled><i class="fa-solid fa-plus"></i> New project</button></div>
+<div class="collection-stats" aria-label="Collection summary"><div><small>Published projects</small><strong id="project-total">0</strong></div><div><small>With live demos</small><strong id="demo-total">0</strong></div><div><small>Technologies used</small><strong id="technology-total">0</strong></div></div>
+<div class="collection-heading"><h2>Project library</h2><span class="collection-label">PUBLIC COLLECTION</span></div>
+<div class="collection-tools"><label class="search-field"><i class="fa-solid fa-magnifying-glass"></i><input id="project-search" type="search" placeholder="Search projects..." aria-label="Search projects" /></label><select id="category-filter" aria-label="Filter by project type"><option value="all">All categories</option><option value="frontend">Frontend</option><option value="backend">Backend</option><option value="full-stack">Full stack</option></select></div>
+<p id="project-status" role="status"></p>
+<div id="admin-projects"></div>
+<div class="workspace-footer"><span>ANANT RADADIYA</span><span>Portfolio studio <i class="fa-solid fa-arrow-up-right-from-square"></i></span></div>
+</div>
+</section>
+<dialog id="account-dialog" aria-labelledby="account-title">
+  <div class="editor-heading"><div><small>YOUR WORKSPACE</small><h2 id="account-title">Account settings</h2></div><button id="close-account" class="editor-close" type="button" aria-label="Close account settings">&times;</button></div>
+  <p id="account-status" role="status"></p>
+  <div class="account-columns">
+  <form id="username-form" class="account-form">
+    <div class="setting-symbol"><i class="fa-regular fa-user"></i></div><h3>Your identity</h3>
+    <label>New username<input name="username" autocomplete="username" autocapitalize="none" spellcheck="false" pattern="[a-zA-Z0-9_]{3,30}" title="3 to 30 letters, numbers, or underscores" minlength="3" maxlength="30" required /></label>
+    <label>Current password<input name="currentPassword" type="password" autocomplete="current-password" required /></label>
+    <button type="submit"><i class="fa-solid fa-check"></i> Save username</button>
+    <p role="status"></p>
+  </form>
+  <form id="password-form" class="account-form">
+    <div class="setting-symbol password-symbol"><i class="fa-solid fa-key"></i></div><h3>Your password</h3>
+    <label>Current password<input name="currentPassword" type="password" autocomplete="current-password" required /></label>
+    <label>New password<input name="newPassword" type="password" autocomplete="new-password" minlength="6" maxlength="128" required /></label>
+    <label>Confirm new password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="6" maxlength="128" required /></label>
+    <button type="submit"><i class="fa-solid fa-check"></i> Save password</button>
+    <p role="status"></p>
+  </form>
+  </div>
+</dialog>
+<dialog class="project-editor" id="project-editor" aria-labelledby="editor-title">
+        <form id="project-form">
+          <div class="editor-heading"><div><small>Project Manager</small><h2 id="editor-title">Add a Project</h2><p>Enter your project details and links below.</p></div><button class="editor-close" type="button" aria-label="Close editor">×</button></div>
+          <input type="hidden" name="projectIndex" />
+          <div class="editor-grid">
+            <label>Project title <span>*</span><input type="text" name="title" placeholder="My Awesome Project" required /></label>
+            <label>Short label <span>*</span><input type="text" name="label" placeholder="Business Website" required /></label>
+            <label>Project type<select name="category"><option value="frontend">Frontend</option><option value="backend">Backend</option><option value="full-stack">Full Stack</option></select></label>
+            <label>Icon or emoji<input type="text" name="icon" placeholder="🚀" maxlength="8" /></label>
+            <label class="editor-wide">Description <span>*</span><textarea name="description" rows="4" placeholder="What does this project do?" required></textarea></label>
+            <label class="editor-wide">Technologies<input type="text" name="technologies" placeholder="React, Node.js, MongoDB" /><small>Separate each technology with a comma.</small></label>
+            <label>Preview image<input type="text" name="image" placeholder="assets/project.jpg or image URL" /></label>
+            <label>Live Demo link<input type="text" name="liveDemo" placeholder="https://your-website.com" /></label>
+            <label class="editor-wide">Source Code link<input type="text" name="sourceCode" placeholder="https://github.com/username/project" /></label>
+          </div>
+          <div class="editor-actions"><button class="delete-project" type="button"><i class="fa-solid fa-trash"></i> Delete</button><span></span><button class="cancel-editor" type="button">Cancel</button><button class="save-project" type="submit">Save Project <i class="fa-solid fa-check"></i></button></div>
+        </form>
+      </dialog>
+</main>
+<script type="module" src="admin.js"></script>
+</body>
+</html>

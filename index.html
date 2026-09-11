@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/devicon.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
-  <link rel="stylesheet" href="styles.css?v=20260907-2" />
+  <link rel="stylesheet" href="styles.css?v=20260911" />
 </head>
 <body>
   <div class="site-shell">
@@ -137,16 +137,16 @@
         <div class="journey-column work-journey">
           <div class="split-heading"><span class="heading-icon"><i class="fa-solid fa-briefcase"></i></span><div><small>Career Journey</small><h2>Work Experience</h2><p>Hands-on experience across development and people operations.</p></div></div>
           <div class="journey-list">
-            <article class="detail-card"><span class="card-index">01</span><em>2023</em><h3>Diploma Intern</h3><strong><i class="fa-regular fa-building"></i> LOOP INFOSOL</strong><ul><li>Completed practical industry training during my diploma.</li><li>Supported frontend development and learned team workflows.</li></ul></article>
+            <article class="detail-card"><span class="card-index">01</span><em>2 Years</em><h3>HR Executive</h3><strong><i class="fa-regular fa-building"></i> LOOP INFOSOL</strong><ul><li>Coordinated recruitment, onboarding, and employee communication.</li><li>Maintained employee records and supported daily HR operations.</li><li>Worked closely with management and team members.</li></ul></article>
             <article class="detail-card"><span class="card-index">02</span><em>2024 – 2025</em><h3>Front-End Developer Intern</h3><strong><i class="fa-regular fa-building"></i> LOOP INFOSOL</strong><ul><li>Built and maintained responsive frontend components.</li><li>Improved layouts, usability, and browser compatibility.</li></ul></article>
-            <article class="detail-card"><span class="card-index">03</span><em>2 Years</em><h3>HR Executive</h3><strong><i class="fa-regular fa-building"></i> LOOP INFOSOL</strong><ul><li>Coordinated recruitment, onboarding, and employee communication.</li><li>Maintained employee records and supported daily HR operations.</li><li>Worked closely with management and team members.</li></ul></article>
+            <article class="detail-card"><span class="card-index">03</span><em>2023</em><h3>Diploma Intern</h3><strong><i class="fa-regular fa-building"></i> LOOP INFOSOL</strong><ul><li>Completed practical industry training during my diploma.</li><li>Supported frontend development and learned team workflows.</li></ul></article>
           </div>
         </div>
         <div class="journey-column education-journey">
           <div class="split-heading cyan"><span class="heading-icon"><i class="fa-solid fa-graduation-cap"></i></span><div><small>Academic Journey</small><h2>Education</h2><p>My academic milestones and qualifications.</p></div></div>
           <div class="journey-list">
-            <article class="detail-card"><span class="card-index">01</span><em>Completed</em><h3>Diploma in Information Technology</h3><strong><i class="fa-solid fa-building-columns"></i> Tapi Diploma Engineering College</strong><div class="score-row"><span>Academic score</span><b>7.89 <small>CGPA</small></b></div></article>
-            <article class="detail-card"><span class="card-index">02</span><em>Completed</em><h3>B.Tech in Information Technology</h3><strong><i class="fa-solid fa-building-columns"></i> P. P. Savani University, Kosamba</strong><div class="score-row"><span>Academic score</span><b>7.50 <small>CGPA</small></b></div></article>
+            <article class="detail-card"><span class="card-index">01</span><em>Completed</em><h3>B.Tech in Information Technology</h3><strong><i class="fa-solid fa-building-columns"></i> P. P. Savani University, Kosamba</strong><div class="score-row"><span>Academic score</span><b>7.50 <small>CGPA</small></b></div></article>
+            <article class="detail-card"><span class="card-index">02</span><em>Completed</em><h3>Diploma in Information Technology</h3><strong><i class="fa-solid fa-building-columns"></i> Tapi Diploma Engineering College</strong><div class="score-row"><span>Academic score</span><b>7.89 <small>CGPA</small></b></div></article>
           </div>
         </div>
       </section>
@@ -158,39 +158,6 @@
         </div>
         <div class="project-card-grid" id="project-list"></div>
       </section>
-
-      <dialog class="project-editor" id="project-editor">
-        <form id="project-form">
-          <div class="editor-heading"><div><small>Project Manager</small><h2 id="editor-title">Add a Project</h2><p>Enter your project details and links below.</p></div><button class="editor-close" type="button" aria-label="Close editor">×</button></div>
-          <input type="hidden" name="projectIndex" />
-          <div class="editor-grid">
-            <label>Project title <span>*</span><input type="text" name="title" placeholder="My Awesome Project" required /></label>
-            <label>Short label <span>*</span><input type="text" name="label" placeholder="Business Website" required /></label>
-            <label>Project type<select name="category"><option value="frontend">Frontend</option><option value="backend">Backend</option><option value="full-stack">Full Stack</option></select></label>
-            <label>Icon or emoji<input type="text" name="icon" placeholder="🚀" maxlength="8" /></label>
-            <label class="editor-wide">Description <span>*</span><textarea name="description" rows="4" placeholder="What does this project do?" required></textarea></label>
-            <label class="editor-wide">Technologies<input type="text" name="technologies" placeholder="React, Node.js, MongoDB" /><small>Separate each technology with a comma.</small></label>
-            <label>Preview image<input type="text" name="image" placeholder="assets/project.jpg or image URL" /></label>
-            <label>Live Demo link<input type="text" name="liveDemo" placeholder="https://your-website.com" /></label>
-            <label class="editor-wide">Source Code link<input type="text" name="sourceCode" placeholder="https://github.com/username/project" /></label>
-          </div>
-          <div class="editor-actions"><button class="delete-project" type="button"><i class="fa-solid fa-lock"></i> Delete</button><span></span><button class="cancel-editor" type="button">Cancel</button><button class="save-project" type="submit">Save Project <i class="fa-solid fa-check"></i></button></div>
-        </form>
-      </dialog>
-
-      <dialog class="project-lock" id="project-lock">
-        <form id="project-lock-form">
-          <div class="editor-heading"><div><small>Protected Action</small><h2>Admin Sign In</h2><p>Sign in to manage projects across all devices.</p></div><button class="project-lock-close" type="button" aria-label="Close password dialog">×</button></div>
-          <label class="project-lock-label">Admin email<input id="project-admin-email" type="email" autocomplete="username" required /></label><label class="project-lock-label">Current password<span class="password-input-wrap"><input id="project-lock-password" type="password" autocomplete="current-password" minlength="6" maxlength="128" required /><button class="password-eye" type="button" aria-label="Show password"><i class="fa-solid fa-eye"></i></button></span></label>
-          <div class="change-password-fields" id="change-password-fields" hidden>
-            <label class="project-lock-label">New password<span class="password-input-wrap"><input id="project-new-password" type="password" autocomplete="new-password" minlength="6" maxlength="128" /><button class="password-eye" type="button" aria-label="Show password"><i class="fa-solid fa-eye"></i></button></span></label>
-            <label class="project-lock-label">Confirm new password<span class="password-input-wrap"><input id="project-confirm-password" type="password" autocomplete="new-password" minlength="6" maxlength="128" /><button class="password-eye" type="button" aria-label="Show password"><i class="fa-solid fa-eye"></i></button></span></label>
-            <small>Use at least 6 characters. Letters, numbers, and symbols are allowed.</small>
-          </div>
-          <p class="project-lock-error" id="project-lock-error" role="alert"></p>
-          <div class="editor-actions lock-actions"><span></span><button class="project-lock-cancel" type="button">Cancel</button><button class="change-password-toggle" type="button">Change Password</button><button class="save-project project-unlock-submit" type="submit">Unlock <i class="fa-solid fa-lock-open"></i></button></div>
-        </form>
-      </dialog>
 
       <section class="portfolio-section compact-section language-section">
         <div class="language-heading"><div class="section-title"><span class="section-eyebrow">Communication</span><h2>Languages<br /><em>I Speak</em></h2><i></i></div><p>Connecting ideas across languages and cultures with clear, confident communication.</p></div>
@@ -286,7 +253,7 @@
     </main>
 
   </div>
-  <script type="module" src="projects.js?v=20260908-2"></script>
+  <script type="module" src="projects.js?v=20260910-1"></script>
   <script type="module" src="reviews.js?v=20260908-1"></script>
   <script src="script.js?v=20260907-1"></script>
 </body>

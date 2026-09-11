@@ -1,1 +1,13 @@
+# Generated Firebase files
 firebase-debug.log
+firebase-debug.*.log
+.firebase/
+
+# Browser test screenshots
+tests/*.png
+
+# Local dependencies and secrets
+node_modules/
+.env
+.env.*
+!.env.example

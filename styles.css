@@ -3,7 +3,7 @@
 html { scroll-behavior:smooth; }
 body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--sans); }
 a { color:inherit; text-decoration:none; }
-.site-shell { max-width:1600px; margin:0 auto; padding:0 4.5vw; overflow:hidden; }
+.site-shell { width:100%; max-width:none; margin:0; padding:0 4.5vw; overflow:hidden; }
 .topbar { height:72px; display:flex; align-items:center; justify-content:space-between; margin:0 -4.5vw; padding:0 30px; background:#080a17; color:#c8cad5; }
 .brand { display:flex; align-items:center; gap:12px; font-size:11px; font-weight:800; line-height:1.05; text-transform:uppercase; letter-spacing:.02em; }
 .brand { transition:color .25s ease; }
@@ -888,3 +888,7 @@ button,input,select,textarea { font:inherit; }
 .change-password-fields:not([hidden]) { display: grid; gap: 14px; margin-top: 14px; }
 .change-password-fields small { color: var(--muted, #9ba8bd); }
 .change-password-toggle { border: 1px solid rgba(25,224,183,.35); border-radius: 10px; background: rgba(25,224,183,.08); color: #19e0b7; padding: 11px 14px; font: inherit; font-weight: 700; cursor: pointer; }
+
+/* Fill wide screens while retaining the mobile layout. */
+@media (min-width: 701px) { .hero { min-height: calc(100svh - 72px); } }
+@media (min-width: 701px) and (max-width: 860px) { .hero { min-height: calc(100svh - 66px); } }

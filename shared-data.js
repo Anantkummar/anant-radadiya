@@ -20,12 +20,31 @@ async function connect() {
 }
 
 export function errorMessage(error) {
-  if (error.code?.startsWith('auth/')) return 'Sign-in failed. Check your admin email and password, then try again.';
+  if (error.code === 'auth/weak-password') return 'Choose a password with at least 6 characters.';
+  if (error.code === 'auth/too-many-requests') return 'Too many attempts. Please wait a few minutes and try again.';
+  if (error.code?.startsWith('auth/')) return 'Authentication failed. Check your username and password, then try again.';
   if (error.code === 'permission-denied') return 'Access denied. Please check the site’s shared storage permissions.';
   return error.message || 'Unable to connect. Please try again.';
 }
 
-export async function signIn(email, password) {
+export async function getAccountProfile() {
+  const { db, database } = await connect();
+  const profile = await db.getDocFromServer(db.doc(database, 'accountLogin', 'owner'));
+  return profile.exists() ? profile.data() : null;
+}
+
+async function resolveEmail(identifier) {
+  const value = identifier.trim().toLowerCase();
+  if (value.includes('@')) return value;
+  const profile = await getAccountProfile();
+  if (!profile || profile.username !== value) {
+    throw new Error('Check your username and try again.');
+  }
+  return profile.email;
+}
+
+export async function signIn(identifier, password) {
+  const email = await resolveEmail(identifier);
   const { auth, db, database, authentication } = await connect();
   const { user } = await auth.signInWithEmailAndPassword(authentication, email, password);
   const admin = await db.getDocFromServer(db.doc(database, 'admins', user.uid));
@@ -35,9 +54,51 @@ export async function signIn(email, password) {
   }
 }
 
-export async function changePassword(password) {
+async function reauthenticate(password) {
   const { auth, authentication } = await connect();
-  await auth.updatePassword(authentication.currentUser, password);
+  const user = authentication.currentUser;
+  if (!user) throw new Error('Please sign in again.');
+  await auth.reauthenticateWithCredential(user, auth.EmailAuthProvider.credential(user.email, password));
+  return { auth, user };
+}
+
+export async function changePassword(password, currentPassword) {
+  if (password.length < 6) throw new Error('Use at least 6 characters for the new password.');
+  const { auth, user } = await reauthenticate(currentPassword);
+  await auth.updatePassword(user, password);
+}
+
+export async function changeUsername(username, currentPassword) {
+  const value = username.trim().toLowerCase();
+  if (!/^[a-z0-9_]{3,30}$/.test(value)) {
+    throw new Error('Use 3 to 30 letters, numbers, or underscores for your username.');
+  }
+  const { user } = await reauthenticate(currentPassword);
+  const { db, database } = await connect();
+  await db.runTransaction(database, async transaction => {
+    const ref = db.doc(database, 'accountLogin', 'owner');
+    const profile = await transaction.get(ref);
+    if (!profile.exists() || profile.data().uid !== user.uid) {
+      throw new Error('This account cannot change the owner username.');
+    }
+    transaction.set(ref, { ...profile.data(), username: value });
+  });
+  return value;
+}
+
+export async function signOut() {
+  const { auth, authentication } = await connect();
+  await auth.signOut(authentication);
+}
+
+export async function resetPassword(identifier) {
+  const email = await resolveEmail(identifier);
+  const { auth, authentication } = await connect();
+  try {
+    await auth.sendPasswordResetEmail(authentication, email);
+  } catch (error) {
+    if (error.code !== 'auth/user-not-found') throw error;
+  }
 }
 
 export async function watchProjects(onChange, onError) {

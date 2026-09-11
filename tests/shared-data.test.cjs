@@ -37,15 +37,27 @@ async function device(server, config = { apiKey: 'test' }) {
     fetch: async () => ({ ok: true, json: async () => config }),
     navigator: { onLine: true }
   });
-  const authentication = { currentUser: { uid: 'owner' } };
+  const authentication = { currentUser: { uid: 'owner', email: 'owner@example.com' } };
   const modules = {
     'firebase-app.js': { initializeApp: () => ({}) },
     'firebase-firestore.js': server.sdk,
     'firebase-auth.js': {
       getAuth: () => authentication, setPersistence: async () => {}, inMemoryPersistence: {},
-      signInWithEmailAndPassword: async () => ({ user: { uid: 'owner' } }),
+      signInWithEmailAndPassword: async (_, email) => {
+        server.signInEmail = email;
+        authentication.currentUser = { uid: 'owner', email };
+        return { user: authentication.currentUser };
+      },
       signOut: async () => { authentication.currentUser = null; },
-      updatePassword: async () => {}
+      EmailAuthProvider: { credential: (email, password) => ({ email, password }) },
+      reauthenticateWithCredential: async (_, credential) => {
+        if (credential.password !== 'current-password') throw new Error('Wrong current password');
+      },
+      updatePassword: async (_, password) => { server.updatedPassword = password; },
+      sendPasswordResetEmail: async (_, email) => {
+        if (server.resetError) throw server.resetError;
+        server.resetEmail = email;
+      }
     }
   };
   const module = new vm.SourceTextModule(fs.readFileSync('shared-data.js', 'utf8'), {
@@ -129,6 +141,52 @@ test('accounts without an admin record cannot unlock project editing', async () 
   assert.equal(authentication.currentUser, null);
   server.records.set('admins/owner', {});
   await api.signIn('owner@example.com', 'password');
+});
+
+test('username changes reach another device and require the current password', async () => {
+  const server = backend();
+  server.records.set('admins/owner', {});
+  server.records.set('accountLogin/owner', { uid: 'owner', username: 'admin', email: 'owner@example.com' });
+  const { api } = await device(server);
+  await api.signIn('ADMIN', 'current-password');
+  assert.equal(server.signInEmail, 'owner@example.com');
+  await assert.rejects(api.changeUsername('newadmin', 'wrong'), /Wrong current password/);
+  assert.equal(server.records.get('accountLogin/owner').username, 'admin');
+  await api.changeUsername('newadmin', 'current-password');
+  const phone = await device(server);
+  await assert.rejects(phone.api.signIn('admin', 'current-password'), /username/);
+  await phone.api.signIn('newadmin', 'current-password');
+  assert.equal(server.signInEmail, 'owner@example.com');
+  await phone.api.resetPassword('newadmin');
+  assert.equal(server.resetEmail, 'owner@example.com');
+  await assert.rejects(api.changeUsername('bad/name', 'current-password'), /3 to 30/);
+});
+
+test('password changes require reauthentication and reject short passwords', async () => {
+  const server = backend();
+  const { api } = await device(server);
+  await assert.rejects(api.changePassword('a', 'current-password'), /at least 6/);
+  await assert.rejects(api.changePassword('new-password', 'wrong'), /Wrong current password/);
+  assert.equal(server.updatedPassword, undefined);
+  await api.changePassword('new-password', 'current-password');
+  assert.equal(server.updatedPassword, 'new-password');
+});
+
+test('password recovery requests a reset for the supplied email', async () => {
+  const server = backend();
+  const { api } = await device(server);
+  await api.resetPassword('owner@example.com');
+  assert.equal(server.resetEmail, 'owner@example.com');
+  server.resetError = { code: 'auth/user-not-found' };
+  await api.resetPassword('missing@example.com');
+  server.resetError = new Error('Network unavailable');
+  await assert.rejects(api.resetPassword('owner@example.com'), /Network unavailable/);
+});
+
+test('admin sign-out clears the authenticated user', async () => {
+  const { api, authentication } = await device(backend());
+  await api.signOut();
+  assert.equal(authentication.currentUser, null);
 });
 
 test('cached and uncommitted snapshots never appear as shared data', async () => {

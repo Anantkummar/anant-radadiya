@@ -4,12 +4,24 @@ Projects and reviews use Firebase Firestore live listeners shared by all devices
 Browser local storage is used only to recover data from the older site.
 The web configuration in firebase-config.json is public. Never add credentials.
 
+## Admin panel
+
+Open `/admin` and sign in with the owner username to add,
+edit, or delete projects. The public website contains no editing controls.
+Changes are published to Firestore and stream to connected visitors.
+Sign out when finished; authentication clears on reload.
+Only accounts in the server-managed `admins` collection can write projects.
+Account settings allows username and password changes after confirming the
+current password. The public `accountLogin/owner` document holds only the login
+alias, owner UID, and recovery email; passwords remain in Firebase Authentication.
+
 ## Firebase setup
 
 The default database was created and firestore.rules was deployed on 2026-09-08.
 Email/password Authentication and the requested admin account were configured
 on 2026-09-08. The owner must choose a password using the private setup link.
-Deployment of the website files remains pending.
+The website and separate admin panel were deployed to Firebase Hosting on
+2026-09-10 at https://anant-radadiya.web.app.
 
 1. In Firebase project anant-radadiya, enable Cloud Firestore and create the
    (default) database in production mode. Select the region before creating it.
@@ -23,7 +35,7 @@ Deployment of the website files remains pending.
    firebase-config.json. For Firebase Hosting:
    firebase deploy --only hosting --project anant-radadiya
 
-Project edits require admin email and password. Reviews are public; database
+Project edits require the admin username and password. Reviews are public; database
 rules validate fields and ratings and prevent visitors from changing existing
 reviews or projects. Only confirmed server snapshots appear as shared data.
 
@@ -57,3 +69,5 @@ cannot edit projects and failed reviews retain their form contents.
 
 Firebase listener documentation:
 https://firebase.google.com/docs/firestore/query-data/listen
+
+Public URLs: `/` (portfolio), `/admin` (admin), and `/project-demo` (demo). Legacy `.html` links redirect automatically.
